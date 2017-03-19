@@ -12,7 +12,8 @@ setup(
     author_email = "me@naftuli.wtf",
     url = "https://github.com/naftulikay/mutagen-tools",
     install_requires = [
-        'setuptools'
+        'setuptools',
+        'mutagen',
     ],
     dependency_links = [],
     entry_points = {
