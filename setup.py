@@ -18,7 +18,8 @@ setup(
     dependency_links = [],
     entry_points = {
         'console_scripts': [
-            'flac2id3 = mutagentools.flac2id3:main'
+            'flac2id3 = mutagentools.cli.flac2id3:main',
+            'id3-clean = mutagentools.cli.id3clean:main'
         ]
     }
 )
