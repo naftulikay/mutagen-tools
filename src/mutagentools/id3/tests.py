@@ -155,8 +155,10 @@ class MainTestCase(unittest.TestCase):
         fixture = ID3()
         fixture.add(TPE2(encoding=Encoding.UTF8, text="Album Artist"))
         fixture.add(TIT2(encoding=Encoding.UTF8, text=["Title 1", "Title 2"]))
+        fixture.add(APIC(encoding=Encoding.UTF8, mime="image/jpeg", type=PictureType.COVER_FRONT, desc="Cover",
+            data=bytes([0x00]*8)))
 
-        result = to_json_dict(fixture, flatten=True)
+        result = to_json_dict(fixture, flatten=True, include_pics=True)
 
         # test that it flattens the TPE2
         self.assertIn('TPE2', result.keys())
@@ -167,6 +169,11 @@ class MainTestCase(unittest.TestCase):
         self.assertEqual(2, len(result.get('TIT2')))
         self.assertIn("Title 1", result.get('TIT2'))
         self.assertIn("Title 2", result.get('TIT2'))
+
+        # test that it does not flatten a single picture
+        self.assertIsNotNone(result.get('APIC', None))
+        self.assertTrue(isinstance(result.get('APIC'), list))
+        self.assertEqual(1, len(result.get('APIC')))
 
 
 class FilterTestCase(unittest.TestCase):

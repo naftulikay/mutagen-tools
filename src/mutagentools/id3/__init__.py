@@ -19,6 +19,8 @@ from mutagentools.id3.filters import (
     private_google_tags, non_picture_tags,
 )
 
+from mutagentools.utils import fold_text_keys
+
 
 def to_json_dict(id3, include_pics=False, flatten=False):
     """Outputs ID3 tags in a JSON-compatible format."""
@@ -80,9 +82,7 @@ def to_json_dict(id3, include_pics=False, flatten=False):
 
     # if we're supposed to flatten, do it now
     if flatten:
-        for key, value in result.items():
-            if isinstance(value, (list, set)) and len(value) == 1:
-                result[key] = value[0]
+        fold_text_keys(result)
 
     return result
 

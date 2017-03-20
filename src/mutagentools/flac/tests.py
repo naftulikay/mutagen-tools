@@ -60,7 +60,7 @@ class MainTestCase(unittest.TestCase):
         """Tests formatting FLAC metadata as a JSON-compatible flat dictionary."""
         fixture = FLAC(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures/fixture.flac'))
 
-        result = to_json_dict(fixture, flatten=True)
+        result = to_json_dict(fixture, flatten=True, include_pics=True)
 
         # test that the album was flattened
         self.assertIn('album', result.keys())
@@ -71,3 +71,8 @@ class MainTestCase(unittest.TestCase):
         self.assertEqual(2, len(result.get('artist')))
         self.assertIn('Artist 1', result.get('artist'))
         self.assertIn('Artist 2', result.get('artist'))
+
+        # test that the picture was not flattened
+        self.assertIsNotNone(result.get('pictures', None))
+        self.assertTrue(isinstance(result.get('pictures'), list))
+        self.assertEqual(1, len(result.get('pictures')))

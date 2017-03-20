@@ -5,6 +5,8 @@ from base64 import b64encode
 
 from mutagen.id3 import PictureType
 
+from mutagentools.utils import fold_text_keys
+
 
 def to_json_dict(flac, include_pics=False, flatten=False):
     """Outputs FLAC tags in a JSON-compatible format."""
@@ -28,8 +30,6 @@ def to_json_dict(flac, include_pics=False, flatten=False):
 
     # flatten if need be
     if flatten:
-        for key, value in result.items():
-            if isinstance(value, (list, set)) and len(value) == 1:
-                result[key] = value[0]
+        fold_text_keys(result)
 
     return result
