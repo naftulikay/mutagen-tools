@@ -20,8 +20,10 @@ def main():
     result = []
 
     for flac_file in args.flac_file:
-        result.append(to_json_dict(FLAC(flac_file.name), include_pics=args.pictures,
-            flatten=not args.no_flatten))
+        result.append({
+            'file': flac_file.name,
+            'tags': to_json_dict(FLAC(flac_file.name), include_pics=args.pictures, flatten=not args.no_flatten)
+        })
 
     print(json.dumps(result, sort_keys=True, indent=2))
 

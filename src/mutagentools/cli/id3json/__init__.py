@@ -19,8 +19,10 @@ def main():
     result = []
 
     for id3_file in args.id3_file:
-        result.append(to_json_dict(MP3(id3_file.name).tags or {}, include_pics=args.pictures,
-            flatten=not args.no_flatten))
+        result.append({
+            'file': id3_file.name,
+            'tags': to_json_dict(MP3(id3_file.name).tags or {}, include_pics=args.pictures, flatten=not args.no_flatten)
+        })
 
     print(json.dumps(result, sort_keys=True, indent=2))
 
