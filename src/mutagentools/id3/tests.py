@@ -22,9 +22,11 @@ import unittest
 
 class MainTestCase(unittest.TestCase):
 
-    @patch.object(ID3, 'save', return_value=None)
+    @patch.object(ID3, 'save', new_callable=mock.MagicMock, return_value=None)
     def test_strip_private_tags(self, mock_save):
         """Tests that stripping of private tags works as expected."""
+        self.assertTrue(isinstance(mock_save, mock.MagicMock))
+
         fixture = ID3()
         # add a title
         fixture.add(TIT2(encoding=Encoding.UTF8, text="A Song"))
@@ -36,7 +38,7 @@ class MainTestCase(unittest.TestCase):
         # should not contain that tag anymore
         self.assertNotIn('PRIV:Google/StoreId:rT9HEn6sL6tN7yhk6oDQfpi1ip6', fixture)
         # should by default call save
-        mock_save.assert_called_once()
+        mock_save.assert_called_with()
 
         # reset the mock and try again without save
         mock_save.reset_mock()
