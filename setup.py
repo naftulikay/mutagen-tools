@@ -19,6 +19,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'flac2id3 = mutagentools.cli.flac2id3:main',
+            'flacjson = mutagentools.cli.flacjson:main',
             'id3-clean = mutagentools.cli.id3clean:main',
             'id3json = mutagentools.cli.id3json:main',
         ]
