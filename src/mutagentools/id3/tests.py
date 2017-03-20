@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from base64 import b64encode
+
 from mutagen.id3 import (
-    APIC, ID3, Encoding, PictureType, PRIV, TIT2,
+    APIC, ID3, Encoding, PictureType, PRIV, TIT2, TPE2, WCOM, WCOP, TBPM, TYER, MCDI
 )
 
 from mutagentools.id3 import (
     strip_private_tags,
+    to_json_dict,
 )
 
 from mutagentools.id3.filters import (
@@ -48,13 +51,129 @@ class MainTestCase(unittest.TestCase):
         # with save=False, should not have saved
         self.assertFalse(mock_save.called)
 
+    def test_to_json_dict(self):
+        """Tests that conversion to a JSON-compatible map works as expected."""
+        picture_binary = bytes([0x00] * 32)
+
+        fixture = ID3()
+        # test that single numeric text entries get represented
+        fixture.add(TBPM(encoding=Encoding.UTF8, text="140"))
+        # test that multiple numeric text entries get represented
+        fixture.add(TYER(encoding=Encoding.UTF8, text=["2012", "2016"]))
+        # test that url entries get represented
+        fixture.add(WCOP(url="https://naftuli.com"))
+        # test multi-url entries
+        fixture.add(WCOM(url="https://naftuli.com"))
+        fixture.add(WCOM(url="https://naftuli.wtf"))
+        # test that single entries get represented
+        fixture.add(TPE2(encoding=Encoding.UTF8, text="Album Artist"))
+        # test that multiple entries get represented
+        fixture.add(TIT2(encoding=Encoding.UTF8, text=["Title 1", "Title 2"]))
+        # test that binary data will or will not be represented
+        fixture.add(MCDI(data=bytes([0x00] * 8)))
+        # test that pictures will or will not be represented
+        fixture.add(APIC(encoding=Encoding.UTF8, mime="image/jpeg", type=PictureType.COVER_FRONT, desc="Cover",
+            data=picture_binary))
+        fixture.add(APIC(encoding=Encoding.UTF8, mime="image/jpeg", type=PictureType.COVER_BACK, desc="Back Cover",
+            data=picture_binary))
+        # test that structured frames will be properly represented
+        fixture.add(PRIV(owner="Naftuli", data=b"something"))
+        fixture.add(PRIV(owner="The Dude", data=b"amazing"))
+
+        # get the value
+        result = to_json_dict(fixture)
+
+        # test single numeric text value
+        self.assertIn('TBPM', result.keys())
+        self.assertEquals(1, len(result.get('TBPM')))
+        self.assertIn(140, result.get('TBPM'))
+
+        # test multiple numeric text value
+        self.assertIn('TYER', result.keys())
+        self.assertEquals(2, len(result.get('TYER')))
+        self.assertIn(2012, result.get('TYER'))
+        self.assertIn(2016, result.get('TYER'))
+
+        # test single url entries
+        self.assertIn('WCOP', result.keys())
+        self.assertEqual(1, len(result.get('WCOP')))
+        self.assertIn('https://naftuli.com', result.get('WCOP'))
+
+        # test multiple url entries
+        self.assertIn('WCOM', result.keys())
+        self.assertEqual(2, len(result.get('WCOM')))
+        self.assertIn('https://naftuli.com', result.get('WCOM'))
+        self.assertIn('https://naftuli.wtf', result.get('WCOM'))
+
+        # test single text entries
+        self.assertIn('TPE2', result.keys())
+        self.assertEqual(1, len(result.get('TPE2')))
+        self.assertIn("Album Artist", result.get('TPE2'))
+
+        # test multiple text entries
+        self.assertIn('TIT2', result.keys())
+        self.assertEqual(2, len(result.get('TIT2')))
+        self.assertIn("Title 1", result.get('TIT2'))
+        self.assertIn("Title 2", result.get('TIT2'))
+
+        # test binary data
+        self.assertIn('MCDI', result.keys())
+        self.assertEqual(b64encode(bytes([0x00] * 8)), result.get('MCDI'))
+
+        # test that pictures aren't included by default
+        self.assertNotIn('APIC', result.keys())
+
+        # test non-standard frames
+        self.assertIn('PRIV', result.keys())
+        self.assertEqual(2, len(result.get('PRIV')))
+        self.assertIn({ 'owner': 'Naftuli', 'data': b64encode(b'something') }, result.get('PRIV'))
+        self.assertIn({ 'owner': 'The Dude', 'data': b64encode(b'amazing') }, result.get('PRIV'))
+
+        # run again, making sure that APIC shows up this time
+        result = to_json_dict(fixture, include_pics=True)
+
+        self.assertEqual(2, len(result.get('APIC')))
+
+        self.assertIn({
+            'data': b64encode(bytes([0x00] * 32)).decode('utf-8'),
+            'desc': "Cover",
+            'mime': 'image/jpeg',
+            'type': 3,
+            'type_friendly': "COVER_FRONT",
+        }, result.get('APIC'))
+
+        self.assertIn({
+            'data': b64encode(bytes([0x00] * 32)).decode('utf-8'),
+            'desc': 'Back Cover',
+            'mime': 'image/jpeg',
+            'type': 4,
+            'type_friendly': "COVER_BACK",
+        }, result.get('APIC'))
+
+    def test_to_json_dict_flat(self):
+        """Tests the flat json dict."""
+        fixture = ID3()
+        fixture.add(TPE2(encoding=Encoding.UTF8, text="Album Artist"))
+        fixture.add(TIT2(encoding=Encoding.UTF8, text=["Title 1", "Title 2"]))
+
+        result = to_json_dict(fixture, flatten=True)
+
+        # test that it flattens the TPE2
+        self.assertIn('TPE2', result.keys())
+        self.assertEqual("Album Artist", result.get('TPE2'))
+
+        # test that it does _NOT_ flatten the TIT2
+        self.assertIn('TIT2', result.keys())
+        self.assertEqual(2, len(result.get('TIT2')))
+        self.assertIn("Title 1", result.get('TIT2'))
+        self.assertIn("Title 2", result.get('TIT2'))
+
 
 class FilterTestCase(unittest.TestCase):
 
     def test_non_picture_tags(self):
         """Tests that the non_picture_tags filter function returns only non-picture tags."""
-        with open('/dev/zero', 'rb') as r:
-            picture_binary = r.read(1024)
+        picture_binary = bytes([0x00] * 32)
 
         fixture = ID3()
         # add multiple images
