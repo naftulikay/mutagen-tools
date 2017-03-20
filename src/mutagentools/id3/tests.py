@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from mutagen.id3 import (
-    APIC, ID3, Encoding, PictureType, TIT2,
+    APIC, ID3, Encoding, PictureType, PRIV, TIT2,
 )
 
-from mutagentools.id3.filters import non_picture_tags
+from mutagentools.id3.filters import (
+    private_google_tags,
+    non_picture_tags,
+)
 
 import unittest
 
@@ -28,3 +31,21 @@ class FilterTestCase(unittest.TestCase):
 
         # the only thing it should contain is the TIT2 tag
         self.assertEqual(['TIT2'], list(non_picture_tags(fixture).keys()))
+
+    def test_private_google_tags(self):
+        """Tests that the filter returns only private Google metadata tags."""
+        fixture = ID3()
+        # add a track title
+        fixture.add(TIT2(encoding=Encoding.UTF8, text="A Song"))
+        # add other random priv tag
+        fixture.add(PRIV(encoding=Encoding.UTF8, owner="Naftuli/Word", data=b'YASS'))
+        # add private google tags
+        fixture.add(PRIV(encoding=Encoding.UTF8, owner="Google/StoreId", data=b'rT9HEn6sL6tN7yhk6oDQfpi1ip6'))
+        fixture.add(PRIV(encoding=Encoding.UTF8, owner="Google/StoreLabelCode", data=b'HOD3zSlIr8rjcwXXiS'))
+
+        # the only thing it should contain is the private google tags
+        keys = private_google_tags(fixture).keys()
+
+        self.assertEqual(2, len(keys))
+        self.assertIn('PRIV:Google/StoreId:rT9HEn6sL6tN7yhk6oDQfpi1ip6', keys)
+        self.assertIn('PRIV:Google/StoreLabelCode:HOD3zSlIr8rjcwXXiS', keys)
