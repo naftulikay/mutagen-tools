@@ -5,6 +5,7 @@ from base64 import b64encode
 
 from mutagen.id3 import PictureType
 
+from mutagentools.flac.convert import convert_flac_to_id3
 from mutagentools.utils import fold_text_keys
 
 
