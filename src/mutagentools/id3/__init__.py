@@ -6,7 +6,7 @@ from base64 import b64encode
 from itertools import accumulate
 
 from mutagen.id3 import (
-    NumericTextFrame, TextFrame, UrlFrame, BinaryFrame, APIC,
+    NumericTextFrame, TextFrame, UrlFrame, BinaryFrame, APIC, TXXX
 )
 
 from mutagen.id3._specs import (
@@ -39,7 +39,10 @@ def to_json_dict(id3, include_pics=False, flatten=False):
         frame_name = first_frame.FrameID
         values = result.get(frame_name, [])
 
-        if isinstance(first_frame, NumericTextFrame):
+        if isinstance(first_frame, TXXX):
+            values = values if values else {}
+            values.update({ f.desc: f.text for f in frames })
+        elif isinstance(first_frame, NumericTextFrame):
             # integer-representable text frame
             values += [int(text) for frame in id3.getall(key) for text in frame.text]
         elif isinstance(first_frame, TextFrame):
@@ -83,6 +86,7 @@ def to_json_dict(id3, include_pics=False, flatten=False):
     # if we're supposed to flatten, do it now
     if flatten:
         fold_text_keys(result)
+        fold_text_keys(result.get('TXXX')) if 'TXXX' in result.keys() else None
 
     return result
 
