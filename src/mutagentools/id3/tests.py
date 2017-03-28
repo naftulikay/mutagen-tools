@@ -4,7 +4,7 @@
 from base64 import b64encode
 
 from mutagen.id3 import (
-    APIC, ID3, Encoding, PictureType, PRIV, TIT2, TPE2, WCOM, WCOP, TBPM, TYER, MCDI
+    APIC, ID3, Encoding, PictureType, PRIV, TIT2, TPE2, WCOM, WCOP, TBPM, TYER, TXXX, MCDI
 )
 
 from mutagentools.id3 import (
@@ -56,6 +56,8 @@ class MainTestCase(unittest.TestCase):
         picture_binary = bytes([0x00] * 32)
 
         fixture = ID3()
+        # add TXXX key-value pair
+        fixture.add(TXXX(encoding=Encoding.UTF8, desc="key", text="value"))
         # test that single numeric text entries get represented
         fixture.add(TBPM(encoding=Encoding.UTF8, text="140"))
         # test that multiple numeric text entries get represented
@@ -149,6 +151,8 @@ class MainTestCase(unittest.TestCase):
             'type': 4,
             'type_friendly': "COVER_BACK",
         }, result.get('APIC'))
+
+        self.assertEqual({'key': ['value']}, result.get('TXXX'))
 
     def test_to_json_dict_flat(self):
         """Tests the flat json dict."""
