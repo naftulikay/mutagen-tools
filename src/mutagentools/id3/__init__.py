@@ -6,7 +6,7 @@ from base64 import b64encode
 from itertools import accumulate
 
 from mutagen.id3 import (
-    NumericTextFrame, TextFrame, UrlFrame, BinaryFrame, APIC, TXXX
+    NumericTextFrame, TextFrame, UrlFrame, BinaryFrame, APIC, TXXX, UFID
 )
 
 from mutagen.id3._specs import (
@@ -26,44 +26,44 @@ def to_json_dict(id3, include_pics=False, flatten=False):
     """Outputs ID3 tags in a JSON-compatible format."""
     result = {}
 
-    for key in id3.keys() if include_pics else non_picture_tags(id3).keys():
-        # account for these types:
-        #  - NumericTextFrame (can be represented by number)
-        #  - TextFrame - str
-        #  - UrlFrame - dict
-        #  - BinaryFrame - dict(data=base64)
-        #  - APIC - dict(data=base64)
-        #  - Frame - dict()
-        frames = id3.getall(key)
-        first_frame = frames[0]
-        frame_name = first_frame.FrameID
+    frame_names = set(map(lambda f: f.FrameID, id3.values()))
+
+    if not include_pics:
+        # filter pictures if asked
+        frame_names = set(filter(lambda f: f != 'APIC', frame_names))
+
+    for frame_name in frame_names:
+        frames = list(filter(lambda f: f.FrameID == frame_name, id3.values()))
         values = result.get(frame_name, [])
 
-        if isinstance(first_frame, TXXX):
-            values = values if values else {}
+        if isinstance(frames[0], TXXX):
+            values = values if isinstance(values, dict) else {}
             values.update({ f.desc: f.text for f in frames })
-        elif isinstance(first_frame, NumericTextFrame):
+        elif isinstance(frames[0], UFID):
+            values = values if isinstance(values, dict) else {}
+            values.update({ f.owner: f.data.decode('utf-8') for f in frames })
+        elif isinstance(frames[0], NumericTextFrame):
             # integer-representable text frame
-            values += [int(text) for frame in id3.getall(key) for text in frame.text]
-        elif isinstance(first_frame, TextFrame):
+            values += [int(text) for frame in frames for text in frame.text]
+        elif isinstance(frames[0], TextFrame):
             # generic text string
-            values += [str(text) for frame in id3.getall(key) for text in frame.text]
-        elif isinstance(first_frame, UrlFrame):
+            values += [str(text) for frame in frames for text in frame.text]
+        elif isinstance(frames[0], UrlFrame):
             # url
-            values += [url for frame in id3.getall(key) for url in \
+            values += [url for frame in frames for url in \
                 ([frame.url] if isinstance(frame.url, (bytes, str)) else frame.url)]
-        elif isinstance(first_frame, BinaryFrame):
+        elif isinstance(frames[0], BinaryFrame):
             # raw, binary data, encode to base64
-            values = b64encode(first_frame.data)
-        elif isinstance(first_frame, APIC):
+            values += [b64encode(frame.data).decode('utf-8') for frame in frames]
+        elif isinstance(frames[0], APIC):
             # structured picture tag, encode data to base64
             values += [{
-                'data': b64encode(first_frame.data).decode('utf-8'),
-                'desc': first_frame.desc,
-                'mime': first_frame.mime,
-                'type': int(first_frame.type),
-                'type_friendly': str(first_frame.type).split('.')[-1],
-            }]
+                'data': b64encode(frame.data).decode('utf-8'),
+                'desc': frame.desc,
+                'mime': frame.mime,
+                'type': int(frame.type),
+                'type_friendly': str(frame.type).split('.')[-1],
+            } for frame in frames]
         else:
             # it's a generic structured frame, break it down
             for frame in frames:

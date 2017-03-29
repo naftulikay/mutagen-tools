@@ -4,7 +4,7 @@
 from base64 import b64encode
 
 from mutagen.id3 import (
-    APIC, ID3, Encoding, PictureType, PRIV, TIT2, TPE2, WCOM, WCOP, TBPM, TYER, TXXX, MCDI
+    APIC, ID3, Encoding, PictureType, PRIV, TIT2, TPE2, WCOM, WCOP, TLEN, TBPM, TYER, TXXX, UFID, MCDI
 )
 
 from mutagentools.id3 import (
@@ -73,6 +73,8 @@ class MainTestCase(unittest.TestCase):
         fixture.add(TIT2(encoding=Encoding.UTF8, text=["Title 1", "Title 2"]))
         # test that binary data will or will not be represented
         fixture.add(MCDI(data=bytes([0x00] * 8)))
+        # test that UFID data will be converted to safe base64 for binary
+        fixture.add(UFID(owner="http://musicbrainz.org", data=b'a56e6f46-f45b-4271-b389-904297463aaf'))
         # test that pictures will or will not be represented
         fixture.add(APIC(encoding=Encoding.UTF8, mime="image/jpeg", type=PictureType.COVER_FRONT, desc="Cover",
             data=picture_binary))
@@ -84,6 +86,10 @@ class MainTestCase(unittest.TestCase):
 
         # get the value
         result = to_json_dict(fixture)
+
+        # test UFID which is a special case
+        self.assertIn('UFID', result.keys())
+        self.assertEquals({ 'http://musicbrainz.org': 'a56e6f46-f45b-4271-b389-904297463aaf' }, result.get('UFID'))
 
         # test single numeric text value
         self.assertIn('TBPM', result.keys())
@@ -120,7 +126,7 @@ class MainTestCase(unittest.TestCase):
 
         # test binary data
         self.assertIn('MCDI', result.keys())
-        self.assertEqual(b64encode(bytes([0x00] * 8)), result.get('MCDI'))
+        self.assertEqual([b64encode(bytes([0x00] * 8)).decode('utf-8')], result.get('MCDI'))
 
         # test that pictures aren't included by default
         self.assertNotIn('APIC', result.keys())

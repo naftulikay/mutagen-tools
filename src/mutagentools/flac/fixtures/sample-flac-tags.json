@@ -1,0 +1,45 @@
+{
+  "accurateripdiscid": "028-0030bb28-03c552e0-8b0b7f1c-1",
+  "accurateripresult": "AccurateRip: Accurate (confidence 7)   [77542706]",
+  "album": "Popstar: Never Stop Never Stopping",
+  "albumartist": "The Lonely Island",
+  "album artist": "The Lonely Island",
+  "artist": [
+    "The Lonely Island",
+    "Adam Levine"
+  ],
+  "author": "The Lonely Island",
+  "cddb disc id": "8B0B7F1C",
+  "cdtoc": "1C+96+2D5C+30DE+5B58+7F78+AB96+D9FE+DDC8+101B6+12A96+14C97+17183+17324+19F19+1C986+1E1DD+1E7F1+20524+221BE+22674+23809+26B9F+27F2F+2B19E+2D23F+2FA58+31C6E+3355F+35F04",
+  "composer": [
+    "Al Hoffman",
+    "John Klenner",
+    "Can \"Stress\" Canatan",
+    "Andy Samberg",
+    "Jorma Taccone",
+    "Skiva Schaffer"
+  ],
+  "crc": "B66CF0EA",
+  "date": "2016",
+  "discnumber": "1",
+  "encoded by": "dBpoweramp Release 14.2",
+  "encoder": "FLAC 1.2.1",
+  "encoder settings": "-compression-level-5 -verify",
+  "genre": "Stage & Screen",
+  "length": "152826",
+  "mbid": "a56e6f46-f45b-4271-b389-904297463aaf",
+  "organization": "Republic",
+  "profile": "(default)",
+  "source": "CD (Lossless)",
+  "style": [
+    "Comedy",
+    "Soundtracks",
+    "Music Comedy",
+    "Teen Pop"
+  ],
+  "title": "I'm So Humble",
+  "totaldiscs": "1",
+  "totaltracks": "28",
+  "tracknumber": "1",
+  "year": "2016"
+}
