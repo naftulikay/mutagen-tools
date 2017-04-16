@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from base64 import b64encode
@@ -17,10 +17,10 @@ from mutagentools.id3.filters import (
     non_picture_tags,
 )
 
-from unittest import mock
-from unittest.mock import patch
-
+import mock
 import unittest
+
+from mock import patch
 
 
 class MainTestCase(unittest.TestCase):

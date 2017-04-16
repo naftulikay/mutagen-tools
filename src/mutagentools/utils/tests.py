@@ -1,13 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from mutagentools.utils import fold_text_keys
 
 
+import mock
 import unittest
 
-from unittest import mock
-from unittest.mock import patch
+from mock import patch
 
 
 class MainTestCase(unittest.TestCase):
