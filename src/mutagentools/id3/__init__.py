@@ -49,7 +49,7 @@ def to_json_dict(id3, include_pics=False, flatten=False):
         elif isinstance(frames[0], UrlFrame):
             # url
             values += [url for frame in frames for url in \
-                ([frame.url] if isinstance(frame.url, (bytes, str)) else frame.url)]
+                ([frame.url] if not isinstance(frame.url, (list, set)) else frame.url)]
         elif isinstance(frames[0], BinaryFrame):
             # raw, binary data, encode to base64
             values += [b64encode(frame.data).decode('utf-8') for frame in frames]

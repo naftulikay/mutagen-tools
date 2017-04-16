@@ -13,6 +13,7 @@ setup(
     url = "https://github.com/naftulikay/mutagen-tools",
     install_requires = [
         'setuptools',
+        'six',
         'mutagen',
     ],
     dependency_links = [],

@@ -26,7 +26,7 @@ def to_json_dict(flac, include_pics=False, flatten=False):
                 'desc': picture.desc,
                 'mime': picture.mime,
                 'type': picture.type,
-                'type_friendly': str(PictureType.from_bytes(bytes([picture.type]), 'little')).split('.')[-1]
+                'type_friendly': str(PictureType(picture.type)).split('.')[-1]
             })
 
     # flatten if need be
