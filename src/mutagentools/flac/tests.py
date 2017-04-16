@@ -176,6 +176,10 @@ class FullConversionTestCase(unittest.TestCase):
         self.assertEqual(fixture.get('accurateripdiscid'), id3.get('TXXX:accurateripdiscid'))
         self.assertEqual(fixture.get('accurateripresult'), id3.get('TXXX:accurateripresult'))
 
+        # test that 'album artist' and 'author' are removed
+        self.assertNotIn('TXXX:album artist', id3.keys())
+        self.assertNotIn('TXXX:author', id3.keys())
+
         # test that there's only a fixed number of TXXX tags there
         self.assertEqual(8, len(list(filter(lambda t: t.FrameID == "TXXX", id3.values()))))
 
