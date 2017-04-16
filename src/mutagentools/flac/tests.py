@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from base64 import b64encode
@@ -32,12 +32,12 @@ from mutagentools.flac.convert import (
 )
 
 import json
+import mock
 import os
 import struct
 import unittest
 
-from unittest import mock
-from unittest.mock import patch
+from mock import patch
 
 
 class MainTestCase(unittest.TestCase):
