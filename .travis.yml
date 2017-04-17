@@ -11,9 +11,6 @@ python:
 
 matrix:
   fast_finish: true
-  allow_failures:
-    # ultra-uber-alpha-beta™
-    - python: '2.7'
 
 cache:
   pip: true

@@ -34,6 +34,7 @@ from mutagentools.flac.convert import (
 import json
 import mock
 import os
+import six
 import struct
 import unittest
 
@@ -344,7 +345,7 @@ class IndividualConversionTestCase(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertTrue(isinstance(result, UFID))
         self.assertEqual('http://musicbrainz.org', result.owner)
-        self.assertEqual(bytes(fixture, 'ascii'), result.data)
+        self.assertEqual(six.b(fixture), result.data)
 
     def test_convert_album_to_talb(self):
         """Test converting a FLAC album to a TALB ID3 tag."""
@@ -442,8 +443,26 @@ class IndividualConversionTestCase(unittest.TestCase):
         self.assertEqual(fixture.mime, result.mime)
         self.assertEqual(fixture.type, result.type)
 
-    def test_convert_toc_to_mcdi(self):
-        """Tests converting a FLAC CDTOC to an MCDI ID3 tag."""
+    def test_convert_toc_to_mcdi_str(self):
+        """Tests converting a FLAC CDTOC to an MCDI ID3 tag via a string."""
+        fixture = "1C+96+2D5C+30DE+5B58+7F78+AB96+D9FE+DDC8+101B6+12A96+14C97+17183+17324+19F19+1C986+1E1DD+1E7F1+20524+221BE+22674+23809+26B9F+27F2F+2B19E+2D23F+2FA58+31C6E+3355F+35F04"
+        fixture_len = len(fixture.split("+"))
+
+        result = convert_toc_to_mcdi(fixture)
+
+        self.assertIsNotNone(result)
+        self.assertTrue(isinstance(result, MCDI))
+
+        # test length
+        self.assertEqual(4 + ((fixture_len - 1) * 8), len(bytearray(result.data)))
+
+        # test track count
+        self.assertEqual(28, struct.unpack('>I', result.data[0:4])[0])
+        # test that first track begins at sector 150
+        self.assertEqual(150, struct.unpack('>Q', result.data[4:12])[0])
+
+    def test_convert_toc_to_mcdi_bytes(self):
+        """Tests converting a FLAC CDTOC to an MCDI ID3 tag via a byte array."""
         fixture = b"1C+96+2D5C+30DE+5B58+7F78+AB96+D9FE+DDC8+101B6+12A96+14C97+17183+17324+19F19+1C986+1E1DD+1E7F1+20524+221BE+22674+23809+26B9F+27F2F+2B19E+2D23F+2FA58+31C6E+3355F+35F04"
         fixture_len = len(fixture.split(b"+"))
 

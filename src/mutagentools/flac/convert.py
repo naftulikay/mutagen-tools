@@ -6,6 +6,7 @@ from mutagen.id3 import (
 )
 
 import re
+import six
 import struct
 
 
@@ -183,7 +184,8 @@ def convert_mbid_to_ufid(flac_mbid):
         # flatten that shita
         flac_mbid = flac_mbid[0]
 
-    return UFID(owner="http://musicbrainz.org", data=flac_mbid if isinstance(flac_mbid, bytes) else bytes(flac_mbid, 'ascii'))
+    return UFID(owner="http://musicbrainz.org", data=flac_mbid if isinstance(flac_mbid, six.binary_type) else \
+        six.b(flac_mbid))
 
 
 def convert_album_to_talb(flac_album):
@@ -230,14 +232,16 @@ def convert_picture_to_apic(flac_picture):
 def convert_toc_to_mcdi(flac_toc):
     """Converts a FLAC formatted CDTOC into an MCDI ID3 tag."""
     # docs https://forum.dbpoweramp.com/showthread.php?16705-FLAC-amp-Ogg-Vorbis-Storage-of-CDTOC
-    if not isinstance(flac_toc, (str, bytes)) and isinstance(flac_toc, (list, set)):
+    if not (isinstance(flac_toc, six.string_types) or isinstance(flac_toc, six.binary_type)) \
+            and isinstance(flac_toc, (list, set)):
+        # if it's a list and not just a sequence of bytes or characters, get the first entry
         flac_toc = flac_toc[0]
 
     # split the string/bytes on a '+' separator, parsing each entry as integers
-    toc = [int(i, 16) for i in flac_toc.split(b'+' if isinstance(flac_toc, bytes) else '+')]
+    toc = [int(i, 16) for i in flac_toc.split(b'+' if isinstance(flac_toc, six.binary_type) else '+')]
 
     # track count is a 32bit unsigned integer; each address is a 64bit unsigned integer
     track_count, track_addresses = struct.pack('>I', toc[0]), list(map(lambda a: struct.pack('>Q', a), toc[1:]))
 
     # flatten out all of the bytes for the various entries and produce one long byte stream
-    return MCDI(data=track_count + bytes([b for ba in track_addresses for b in ba]))
+    return MCDI(data=b''.join([track_count] + track_addresses))
