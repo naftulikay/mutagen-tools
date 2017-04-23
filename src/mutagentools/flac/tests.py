@@ -226,6 +226,22 @@ class FullConversionTestCase(unittest.TestCase):
 
         self.assertEqual(['1/1'], id3.get('TPOS'))
 
+    def test_convert_flac_to_id3_duplicates(self):
+        """Tests that variations or ordering of duplicated tags don't mess everything up."""
+        flac_mock = mock.MagicMock()
+        flac_mock.tags = {
+            'albumartist': 'Album Artist',
+            'artist': 'Artist',
+            'date': '2017'
+        }
+
+        # test if albumartist is present if it works
+        id3 = ID3()
+        list(map(lambda t: id3.add(t), convert_flac_to_id3(flac_mock)))
+        self.assertEqual(['Album Artist'], id3.get('TPE2'))
+        self.assertEqual(['Artist'], id3.get('TPE1'))
+        self.assertEqual(2017, int(str(id3.get('TDRC').text[0])))
+
 
 class IndividualConversionTestCase(unittest.TestCase):
 

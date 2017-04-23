@@ -5,6 +5,13 @@ from mutagen.id3 import (
     APIC, ID3, MCDI, TALB, TCON, TCOM, TDRC, TIT2, TLEN, TPE1, TPE2, TPOS, TPUB, TRCK, TXXX, UFID, Encoding
 )
 
+from mutagentools.utils import (
+    contains_any,
+    first,
+    first_of_list,
+    pop_keys,
+)
+
 import re
 import six
 import struct
@@ -22,11 +29,11 @@ def convert_flac_to_id3(flac):
     tags.pop('crc') if 'crc' in tags.keys() else None
 
     # artist related tags
-    if 'albumartist' in tags.keys() or 'album artist' in tags.keys():
-        result.append(convert_albumartist_to_tpe2(list(map(lambda k: tags.pop(k), ['albumartist', 'album artist']))[0]))
+    if contains_any(tags.keys(), 'albumartist', 'album artist'):
+        result.append(convert_albumartist_to_tpe2(first(pop_keys(tags, 'albumartist', 'album artist'))))
 
-    if 'artist' in tags.keys() or 'author' in tags.keys():
-        result.append(convert_artist_to_tpe1(list(map(lambda k: tags.pop(k), ['artist', 'author']))[0]))
+    if contains_any(tags.keys(), 'artist', 'author'):
+        result.append(convert_artist_to_tpe1(first(pop_keys(tags, 'artist', 'author'))))
 
     if 'composer' in tags.keys():
         result.append(convert_composer_to_tcom(tags.pop('composer')))
@@ -42,8 +49,8 @@ def convert_flac_to_id3(flac):
         result.append(convert_disc_number_to_tpos(tags.pop('discnumber'),
             tags.pop('totaldiscs') if 'totaldiscs' in tags.keys() else None))
 
-    if 'date' in tags.keys() or 'year' in tags.keys():
-        result.append(convert_date_to_tdrc(list(map(lambda k: tags.pop(k), ['date', 'year']))[0]))
+    if contains_any(tags.keys(), 'date', 'year'):
+        result.append(convert_date_to_tdrc(first(pop_keys(tags, 'date', 'year'))))
 
     if 'organization' in tags.keys():
         result.append(convert_organization_to_tpub(tags.pop('organization')))
@@ -59,8 +66,8 @@ def convert_flac_to_id3(flac):
         result.append(convert_title_to_tit2(tags.pop('title')))
 
     if 'tracknumber' in tags.keys():
-        tracknumber = tags.pop('tracknumber')
-        totaltracks = tags.pop('totaltracks') if 'totaltracks' in tags.keys() else None
+        tracknumber = first_of_list(tags.pop('tracknumber'))
+        totaltracks = first_of_list(tags.pop('totaltracks')) if 'totaltracks' in tags.keys() else None
 
         if PART_OF_SET.match(tracknumber):
             # it's a complicated dude
