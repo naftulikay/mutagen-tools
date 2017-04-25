@@ -46,8 +46,8 @@ def convert_flac_to_id3(flac):
         result.append(convert_genre_to_tcon(tags.pop('genre'), tags.pop('style') if 'style' in tags.keys() else []))
 
     if 'discnumber' in tags.keys():
-        result.append(convert_disc_number_to_tpos(tags.pop('discnumber'),
-            tags.pop('totaldiscs') if 'totaldiscs' in tags.keys() else None))
+        result.append(convert_disc_number_to_tpos(first_of_list(tags.pop('discnumber')),
+            first_of_list(first(pop_keys(tags, 'totaldiscs', 'disctotal')))))
 
     if contains_any(tags.keys(), 'date', 'year'):
         result.append(convert_date_to_tdrc(first(pop_keys(tags, 'date', 'year'))))
@@ -67,7 +67,7 @@ def convert_flac_to_id3(flac):
 
     if 'tracknumber' in tags.keys():
         tracknumber = first_of_list(tags.pop('tracknumber'))
-        totaltracks = first_of_list(tags.pop('totaltracks')) if 'totaltracks' in tags.keys() else None
+        totaltracks = first_of_list(first(pop_keys(tags, 'totaltracks', 'tracktotal')))
 
         if PART_OF_SET.match(tracknumber):
             # it's a complicated dude
