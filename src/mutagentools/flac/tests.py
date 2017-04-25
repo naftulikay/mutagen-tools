@@ -242,6 +242,62 @@ class FullConversionTestCase(unittest.TestCase):
         self.assertEqual(['Artist'], id3.get('TPE1'))
         self.assertEqual(2017, int(str(id3.get('TDRC').text[0])))
 
+    def test_convert_tracktotal(self):
+        """Tests that converting a track number and total number of tracks is accomplished."""
+        tags = {
+            'tracknumber': '1',
+            'totaltracks': '3',
+            'tracktotal': '5',
+        }
+
+        flac_mock = mock.MagicMock()
+        flac_mock.tags = tags
+
+        id3 = ID3()
+        list(map(lambda t: id3.add(t), convert_flac_to_id3(flac_mock)))
+        # make sure that no TXXX tags are created
+        self.assertEqual(0, len(list(
+            filter(lambda f: f.FrameID == 'TXXX', id3.values()
+        ))))
+
+    def test_convert_tracktotal_no_total(self):
+        """Tests that total track numbers are detected properly."""
+        # test that the track got populated singularly
+        flac_mock = mock.MagicMock()
+        flac_mock.tags = { 'tracknumber': '1' }
+
+        id3 = ID3()
+        list(map(lambda t: id3.add(t), convert_flac_to_id3(flac_mock)))
+        self.assertEqual('01', id3.get('TRCK'))
+
+    def test_convert_disctotal_no_total(self):
+        """Tests that total disc numbers something something."""
+        # test that the track got populated singularly
+        flac_mock = mock.MagicMock()
+        flac_mock.tags = { 'discnumber': '1' }
+
+        id3 = ID3()
+        list(map(lambda t: id3.add(t), convert_flac_to_id3(flac_mock)))
+        self.assertEqual('1', id3.get('TPOS'))
+
+    def test_convert_disctotal(self):
+        """Tests that total disc numbers something something."""
+        # test that the track got populated singularly
+        flac_mock = mock.MagicMock()
+        flac_mock.tags = {
+            'discnumber': '1',
+            'totaldiscs': '3',
+            'disctotal': '5',
+        }
+
+        id3 = ID3()
+        list(map(lambda t: id3.add(t), convert_flac_to_id3(flac_mock)))
+        self.assertEqual('1/3', id3.get('TPOS'))
+        # make sure that no TXXX tags are created
+        self.assertEqual(0, len(list(
+            filter(lambda f: f.FrameID == 'TXXX', id3.values()
+        ))))
+
 
 class IndividualConversionTestCase(unittest.TestCase):
 
